@@ -240,7 +240,6 @@
           ]
         }
       }
-      // No 'options' for throughput here if applied at database level
     }
   }
 
@@ -248,3 +247,4 @@ output cosmosDbAccountName string = account.name
 output cosmosDbAccountId string = account.id
 output cosmosDbDatabaseName string = database.name
 output cosmosDbDatabaseId string = database.id
+output cosmosDbEndpoint string = account.properties.documentEndpoint

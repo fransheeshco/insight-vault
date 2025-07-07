@@ -14,6 +14,15 @@ param environmentType string = 'nonprod'
 @description('Instrumentation Key for Application Insights.')
 param appInsightsKey string
 
+@description('Cosmos DB Account Name')
+param cosmosDbAccountName string
+
+@description('Cosmos DB Account ID')
+param cosmosDbAccountId string
+
+@description('Cosmos DB Account Endpoint')
+param cosmosDbEndpoint string
+
 var appServicePlanName = 'insightVaultASP'
 var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'F1'
 
@@ -36,6 +45,18 @@ resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
           value: appInsightsKey
+        }
+        {
+          name: 'COSMOS_DB_ACCOUNT'
+          value: cosmosDbAccountName
+        }
+        {
+          name: 'COSMOS_DB_KEY'
+          value: listKeys(cosmosDbAccountId, '2021-04-15').primaryMasterKey
+        }
+        {
+          name: 'COSMOS_DB_URI'
+          value: cosmosDbEndpoint
         }
       ]
     }

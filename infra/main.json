@@ -1,0 +1,780 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.36.1.42791",
+      "templateHash": "13202037542749757852"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Deployment location for all resources"
+      }
+    },
+    "cosmosAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "CosmosDB account name"
+      }
+    },
+    "primaryRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The primary region for the Cosmos DB account."
+      }
+    },
+    "secondaryRegion": {
+      "type": "string",
+      "metadata": {
+        "description": "The secondary region for the Cosmos DB account."
+      }
+    },
+    "defaultConsistencyLevel": {
+      "type": "string",
+      "metadata": {
+        "description": "Cosmos DB default consistency level"
+      }
+    },
+    "maxStalenessPrefix": {
+      "type": "int",
+      "metadata": {
+        "description": "Max stale requests for BoundedStaleness."
+      }
+    },
+    "maxIntervalInSeconds": {
+      "type": "int",
+      "metadata": {
+        "description": "Max lag time in seconds for BoundedStaleness."
+      }
+    },
+    "systemManagedFailover": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enable system-managed failover for regions"
+      }
+    },
+    "enableAnalyticalStorage": {
+      "type": "bool",
+      "metadata": {
+        "description": "Enable analytical storage for Cosmos DB account."
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Cosmos DB SQL database name."
+      }
+    },
+    "userContainerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name for the user container."
+      }
+    },
+    "fileContainerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name for the file container."
+      }
+    },
+    "throughput": {
+      "type": "int",
+      "metadata": {
+        "description": "Container/database throughput (RU/s)."
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual network name"
+      }
+    },
+    "subnet1name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 1 name"
+      }
+    },
+    "subnet2name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 2 name"
+      }
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "VNet address prefix"
+      }
+    },
+    "subnet1AddressPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 1 address prefix"
+      }
+    },
+    "subnet2AddressPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet 2 address prefix"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 24,
+      "metadata": {
+        "description": "Storage account name"
+      }
+    },
+    "storageAccountSku": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage account SKU"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "networkDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "subnet1name": {
+            "value": "[parameters('subnet1name')]"
+          },
+          "subnet2name": {
+            "value": "[parameters('subnet2name')]"
+          },
+          "vnetAddressPrefix": {
+            "value": "[parameters('vnetAddressPrefix')]"
+          },
+          "subnet1AddressPrefix": {
+            "value": "[parameters('subnet1AddressPrefix')]"
+          },
+          "subnet2AddressPrefix": {
+            "value": "[parameters('subnet2AddressPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "1112215716753483782"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Location for Virtual Network."
+              }
+            },
+            "vnetName": {
+              "type": "string",
+              "defaultValue": "insightVaultVnet",
+              "metadata": {
+                "description": "Name for Virtual Network."
+              }
+            },
+            "subnet1name": {
+              "type": "string",
+              "defaultValue": "Subnet-1",
+              "metadata": {
+                "description": "Name for subnet-1"
+              }
+            },
+            "subnet2name": {
+              "type": "string",
+              "defaultValue": "Subnet-2",
+              "metadata": {
+                "description": "Name for subnet-2"
+              }
+            },
+            "vnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.0.0.0/16",
+              "metadata": {
+                "description": "Address prefix for the virtual network."
+              }
+            },
+            "subnet1AddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.0.0.0/24",
+              "metadata": {
+                "description": "Address prefix for Subnet 1."
+              }
+            },
+            "subnet2AddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.0.1.0/24",
+              "metadata": {
+                "description": "Address prefix for Subnet 2."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2023-09-01",
+              "name": "[parameters('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('subnet1name')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('subnet1AddressPrefix')]"
+                    }
+                  },
+                  {
+                    "name": "[parameters('subnet2name')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('subnet2AddressPrefix')]"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            },
+            "vnetName": {
+              "type": "string",
+              "value": "[parameters('vnetName')]"
+            },
+            "subnet1Id": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '2023-09-01').subnets[0].id]"
+            },
+            "subnet2Id": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '2023-09-01').subnets[1].id]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "storageDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "storageAccountSku": {
+            "value": "[parameters('storageAccountSku')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "2777784655932474226"
+            }
+          },
+          "parameters": {
+            "storageAccountName": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 24,
+              "metadata": {
+                "description": "Provide a name for the storage account. Use only lowercase letters and numbers. The name must be unique across Azure."
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location for the storage account."
+              }
+            },
+            "storageAccountSku": {
+              "type": "string",
+              "defaultValue": "Standard_LRS",
+              "metadata": {
+                "description": "The SKU of the storage account (e.g., Standard_LRS, Standard_GRS)."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('storageAccountName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "[parameters('storageAccountSku')]"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "accessTier": "Hot"
+              }
+            }
+          ],
+          "outputs": {
+            "storageAccountId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            },
+            "storageAccountName": {
+              "type": "string",
+              "value": "[parameters('storageAccountName')]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "cosmosDbDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "accountName": {
+            "value": "[parameters('cosmosAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "primaryRegion": {
+            "value": "[parameters('primaryRegion')]"
+          },
+          "secondaryRegion": {
+            "value": "[parameters('secondaryRegion')]"
+          },
+          "defaultConsistencyLevel": {
+            "value": "[parameters('defaultConsistencyLevel')]"
+          },
+          "maxStalenessPrefix": {
+            "value": "[parameters('maxStalenessPrefix')]"
+          },
+          "maxIntervalInSeconds": {
+            "value": "[parameters('maxIntervalInSeconds')]"
+          },
+          "systemManagedFailover": {
+            "value": "[parameters('systemManagedFailover')]"
+          },
+          "enableAnalyticalStorage": {
+            "value": "[parameters('enableAnalyticalStorage')]"
+          },
+          "databaseName": {
+            "value": "[parameters('databaseName')]"
+          },
+          "userContainerName": {
+            "value": "[parameters('userContainerName')]"
+          },
+          "fileContainerName": {
+            "value": "[parameters('fileContainerName')]"
+          },
+          "throughput": {
+            "value": "[parameters('throughput')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "16696725355288884296"
+            }
+          },
+          "parameters": {
+            "accountName": {
+              "type": "string",
+              "metadata": {
+                "description": "CosmosDB account name"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Location for the Azure Cosmos DB account."
+              }
+            },
+            "primaryRegion": {
+              "type": "string",
+              "metadata": {
+                "description": "The primary region for the Azure Cosmos DB account."
+              }
+            },
+            "secondaryRegion": {
+              "type": "string",
+              "metadata": {
+                "description": "The secondary region for the Azure Cosmos DB account."
+              }
+            },
+            "defaultConsistencyLevel": {
+              "type": "string",
+              "defaultValue": "Session",
+              "allowedValues": [
+                "Eventual",
+                "ConsistentPrefix",
+                "Session",
+                "BoundedStaleness",
+                "Strong"
+              ],
+              "metadata": {
+                "description": "The default consistency level of the Cosmos DB account."
+              }
+            },
+            "maxStalenessPrefix": {
+              "type": "int",
+              "defaultValue": 100000,
+              "minValue": 10,
+              "maxValue": 2147483647,
+              "metadata": {
+                "description": "Max stale requests. Required for BoundedStaleness. Valid ranges, Single Region: 10 to 2147483647. Multi Region: 100000 to 2147483647."
+              }
+            },
+            "maxIntervalInSeconds": {
+              "type": "int",
+              "defaultValue": 300,
+              "minValue": 5,
+              "maxValue": 86400,
+              "metadata": {
+                "description": "Max lag time (minutes). Required for BoundedStaleness. Valid ranges, Single Region: 5 to 84600. Multi Region: 300 to 86400"
+              }
+            },
+            "systemManagedFailover": {
+              "type": "bool",
+              "defaultValue": true,
+              "allowedValues": [
+                true,
+                false
+              ],
+              "metadata": {
+                "description": "Enable system managed failover for regions"
+              }
+            },
+            "enableAnalyticalStorage": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Enable analytical storage for the Cosmos DB account."
+              }
+            },
+            "databaseName": {
+              "type": "string",
+              "defaultValue": "insightVaultDB",
+              "metadata": {
+                "description": "Name for the database."
+              }
+            },
+            "userContainerName": {
+              "type": "string",
+              "defaultValue": "userContainer",
+              "metadata": {
+                "description": "Name for the user container."
+              }
+            },
+            "fileContainerName": {
+              "type": "string",
+              "defaultValue": "fileContainer",
+              "metadata": {
+                "description": "Name for the file container."
+              }
+            },
+            "throughput": {
+              "type": "int",
+              "defaultValue": 400,
+              "minValue": 400,
+              "maxValue": 1000000,
+              "metadata": {
+                "description": "The throughput for the containers (RU/s)."
+              }
+            }
+          },
+          "variables": {
+            "consistencyPolicy": {
+              "Eventual": {
+                "defaultConsistencyLevel": "Eventual"
+              },
+              "ConsistentPrefix": {
+                "defaultConsistencyLevel": "ConsistentPrefix"
+              },
+              "Session": {
+                "defaultConsistencyLevel": "Session"
+              },
+              "BoundedStaleness": {
+                "defaultConsistencyLevel": "BoundedStaleness",
+                "maxStalenessPrefix": "[parameters('maxStalenessPrefix')]",
+                "maxIntervalInSeconds": "[parameters('maxIntervalInSeconds')]"
+              },
+              "Strong": {
+                "defaultConsistencyLevel": "Strong"
+              }
+            },
+            "locations": [
+              {
+                "locationName": "[parameters('primaryRegion')]",
+                "failoverPriority": 0,
+                "isZoneRedundant": false
+              },
+              {
+                "locationName": "[parameters('secondaryRegion')]",
+                "failoverPriority": 1,
+                "isZoneRedundant": false
+              }
+            ]
+          },
+          "resources": [
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts",
+              "apiVersion": "2025-04-15",
+              "name": "[toLower(parameters('accountName'))]",
+              "location": "[parameters('location')]",
+              "kind": "GlobalDocumentDB",
+              "properties": {
+                "consistencyPolicy": "[variables('consistencyPolicy')[parameters('defaultConsistencyLevel')]]",
+                "locations": "[variables('locations')]",
+                "databaseAccountOfferType": "Standard",
+                "enableAnalyticalStorage": "[parameters('enableAnalyticalStorage')]",
+                "disableKeyBasedMetadataWriteAccess": true,
+                "enableAutomaticFailover": "[parameters('systemManagedFailover')]"
+              }
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+              "apiVersion": "2025-04-15",
+              "name": "[format('{0}/{1}', toLower(parameters('accountName')), parameters('databaseName'))]",
+              "properties": {
+                "resource": {
+                  "id": "[parameters('databaseName')]"
+                },
+                "options": {
+                  "throughput": "[parameters('throughput')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', toLower(parameters('accountName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2025-04-15",
+              "name": "[format('{0}/{1}/{2}', toLower(parameters('accountName')), parameters('databaseName'), parameters('userContainerName'))]",
+              "properties": {
+                "resource": {
+                  "id": "[parameters('userContainerName')]",
+                  "partitionKey": {
+                    "paths": [
+                      "/userid"
+                    ]
+                  },
+                  "indexingPolicy": {
+                    "indexingMode": "consistent",
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/myPathToNotIndex/*"
+                      },
+                      {
+                        "path": "/_etag/?"
+                      }
+                    ],
+                    "compositeIndexes": [
+                      [
+                        {
+                          "path": "/name",
+                          "order": "ascending"
+                        },
+                        {
+                          "path": "/name",
+                          "order": "descending"
+                        }
+                      ]
+                    ],
+                    "spatialIndexes": [
+                      {
+                        "path": "/location/*",
+                        "types": [
+                          "Point",
+                          "Polygon",
+                          "MultiPolygon",
+                          "LineString"
+                        ]
+                      }
+                    ]
+                  },
+                  "defaultTtl": 86400,
+                  "uniqueKeyPolicy": {
+                    "uniqueKeys": [
+                      {
+                        "paths": [
+                          "/userid"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', toLower(parameters('accountName')), parameters('databaseName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+              "apiVersion": "2025-04-15",
+              "name": "[format('{0}/{1}/{2}', toLower(parameters('accountName')), parameters('databaseName'), parameters('fileContainerName'))]",
+              "properties": {
+                "resource": {
+                  "id": "[parameters('fileContainerName')]",
+                  "partitionKey": {
+                    "paths": [
+                      "/fileid"
+                    ],
+                    "kind": "Hash"
+                  },
+                  "indexingPolicy": {
+                    "indexingMode": "consistent",
+                    "includedPaths": [
+                      {
+                        "path": "/*"
+                      }
+                    ],
+                    "excludedPaths": [
+                      {
+                        "path": "/myPathToNotIndex/*"
+                      },
+                      {
+                        "path": "/_etag/?"
+                      }
+                    ],
+                    "compositeIndexes": [
+                      [
+                        {
+                          "path": "/dateCreated",
+                          "order": "ascending"
+                        },
+                        {
+                          "path": "/dateCreated",
+                          "order": "descending"
+                        }
+                      ]
+                    ],
+                    "spatialIndexes": [
+                      {
+                        "path": "/location/*",
+                        "types": [
+                          "Point",
+                          "Polygon",
+                          "MultiPolygon",
+                          "LineString"
+                        ]
+                      }
+                    ]
+                  },
+                  "defaultTtl": 86400,
+                  "uniqueKeyPolicy": {
+                    "uniqueKeys": [
+                      {
+                        "paths": [
+                          "/fileID"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', toLower(parameters('accountName')), parameters('databaseName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "cosmosDbAccountName": {
+              "type": "string",
+              "value": "[toLower(parameters('accountName'))]"
+            },
+            "cosmosDbAccountId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', toLower(parameters('accountName')))]"
+            },
+            "cosmosDbDatabaseName": {
+              "type": "string",
+              "value": "[parameters('databaseName')]"
+            },
+            "cosmosDbDatabaseId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', toLower(parameters('accountName')), parameters('databaseName'))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "cosmosDbName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment'), '2022-09-01').outputs.cosmosDbAccountName.value]"
+    },
+    "cosmosDbId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment'), '2022-09-01').outputs.cosmosDbDatabaseId.value]"
+    },
+    "storageId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storageDeployment'), '2022-09-01').outputs.storageAccountId.value]"
+    },
+    "vnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkDeployment'), '2022-09-01').outputs.vnetId.value]"
+    },
+    "subnet1Id": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkDeployment'), '2022-09-01').outputs.subnet1Id.value]"
+    },
+    "subnet2Id": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkDeployment'), '2022-09-01').outputs.subnet2Id.value]"
+    }
+  }
+}
