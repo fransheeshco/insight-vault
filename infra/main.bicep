@@ -100,7 +100,7 @@
     }
   }
 
-  module appService 'modules/appservice/main.bicep' = {
+  module appServiceModule 'modules/appservice/main.bicep' = {
     name: 'appServiceDeployment'  
     params: {
       location: location
@@ -110,6 +110,8 @@
       cosmosDbAccountId: cosmosDbModule.outputs.cosmosDbAccountId
       cosmosDbAccountName: cosmosDbModule.outputs.cosmosDbAccountName
       cosmosDbEndpoint: cosmosDbModule.outputs.cosmosDbEndpoint
+      storageAccountName: storageModule.outputs.storageAccountName
+      networkName: networkModule.outputs.vnetName
     }
   }
 
@@ -140,6 +142,16 @@
       throughput: throughput
     }
   }
+
+  module identity './modules/identitymanager/main.bicep' = {
+  name: 'assignRoles'
+  params: {
+    appServiceAppName: appServiceName
+    appServicePrincipalID: appServiceModule.outputs.appServicePrincipalID
+    storageAccountId: storageModule.outputs.storageAccountId
+  }
+}
+
 
   output cosmosDbName string = cosmosDbModule.outputs.cosmosDbAccountName
   output cosmosDbId string = cosmosDbModule.outputs.cosmosDbDatabaseId
