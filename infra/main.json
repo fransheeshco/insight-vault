@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.36.1.42791",
-      "templateHash": "13202037542749757852"
+      "version": "0.36.177.2456",
+      "templateHash": "1538770223942052377"
     }
   },
   "parameters": {
@@ -136,6 +136,26 @@
       "metadata": {
         "description": "Storage account SKU"
       }
+    },
+    "appServiceName": {
+      "type": "string"
+    },
+    "appInsightName": {
+      "type": "string",
+      "metadata": {
+        "description": "App Insight name."
+      }
+    },
+    "environmentType": {
+      "type": "string",
+      "defaultValue": "nonprod",
+      "allowedValues": [
+        "nonprod",
+        "prod"
+      ],
+      "metadata": {
+        "description": "Specifies the environment type, which controls the SKU."
+      }
     }
   },
   "resources": [
@@ -177,8 +197,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.36.1.42791",
-              "templateHash": "1112215716753483782"
+              "version": "0.36.177.2456",
+              "templateHash": "7978429445256326348"
             }
           },
           "parameters": {
@@ -284,6 +304,260 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
+      "name": "AppInsightsDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "appInsightName": {
+            "value": "[parameters('appInsightName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.177.2456",
+              "templateHash": "12370989646376037469"
+            }
+          },
+          "parameters": {
+            "appInsightName": {
+              "type": "string",
+              "defaultValue": "insightVaultAI",
+              "metadata": {
+                "description": "App Insight Name"
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "App service plan location"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Insights/components",
+              "apiVersion": "2020-02-02",
+              "name": "[parameters('appInsightName')]",
+              "location": "[parameters('location')]",
+              "kind": "web",
+              "properties": {
+                "Application_Type": "web"
+              }
+            }
+          ],
+          "outputs": {
+            "appInsightsKey": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightName')), '2020-02-02').InstrumentationKey]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "appServiceDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "appServiceAppName": {
+            "value": "[parameters('appServiceName')]"
+          },
+          "environmentType": {
+            "value": "[parameters('environmentType')]"
+          },
+          "appInsightsKey": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'AppInsightsDeployment'), '2022-09-01').outputs.appInsightsKey.value]"
+          },
+          "cosmosDbAccountId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment'), '2022-09-01').outputs.cosmosDbAccountId.value]"
+          },
+          "cosmosDbAccountName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment'), '2022-09-01').outputs.cosmosDbAccountName.value]"
+          },
+          "cosmosDbEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment'), '2022-09-01').outputs.cosmosDbEndpoint.value]"
+          },
+          "storageAccountName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storageDeployment'), '2022-09-01').outputs.storageAccountName.value]"
+          },
+          "networkName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networkDeployment'), '2022-09-01').outputs.vnetName.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.177.2456",
+              "templateHash": "12406865813204121890"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The Azure region to deploy resources in."
+              }
+            },
+            "appServiceAppName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the App Service application."
+              }
+            },
+            "environmentType": {
+              "type": "string",
+              "defaultValue": "nonprod",
+              "allowedValues": [
+                "nonprod",
+                "prod"
+              ],
+              "metadata": {
+                "description": "Specifies the environment type, which controls the SKU."
+              }
+            },
+            "appInsightsKey": {
+              "type": "string",
+              "metadata": {
+                "description": "Instrumentation Key for Application Insights."
+              }
+            },
+            "cosmosDbAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Cosmos DB Account Name"
+              }
+            },
+            "cosmosDbAccountId": {
+              "type": "string",
+              "metadata": {
+                "description": "Cosmos DB Account ID"
+              }
+            },
+            "cosmosDbEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Cosmos DB Account Endpoint"
+              }
+            },
+            "storageAccountName": {
+              "type": "string"
+            },
+            "networkName": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "appServicePlanName": "insightVaultASP",
+            "appServicePlanSkuName": "[if(equals(parameters('environmentType'), 'prod'), 'P1v3', 'F1')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2024-04-01",
+              "name": "[variables('appServicePlanName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "[variables('appServicePlanSkuName')]",
+                "tier": "[if(equals(parameters('environmentType'), 'prod'), 'ElasticPremium', 'Dynamic')]"
+              }
+            },
+            {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2024-04-01",
+              "name": "[parameters('appServiceAppName')]",
+              "location": "[parameters('location')]",
+              "kind": "functionapp",
+              "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                "httpsOnly": true,
+                "siteConfig": {
+                  "appSettings": [
+                    {
+                      "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                      "value": "[parameters('appInsightsKey')]"
+                    },
+                    {
+                      "name": "COSMOS_DB_ACCOUNT",
+                      "value": "[parameters('cosmosDbAccountName')]"
+                    },
+                    {
+                      "name": "COSMOS_DB_KEY",
+                      "value": "[listKeys(parameters('cosmosDbAccountId'), '2021-04-15').primaryMasterKey]"
+                    },
+                    {
+                      "name": "COSMOS_DB_URI",
+                      "value": "[parameters('cosmosDbEndpoint')]"
+                    },
+                    {
+                      "name": "STORAGE_ACCOUNT_NAME",
+                      "value": "[parameters('storageAccountName')]"
+                    },
+                    {
+                      "name": "NETWORK_NAME",
+                      "value": "[parameters('networkName')]"
+                    }
+                  ]
+                }
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "appServiceAppHostName": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('appServiceAppName')), '2024-04-01').defaultHostName]"
+            },
+            "appServiceAppResourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/sites', parameters('appServiceAppName'))]"
+            },
+            "appServicePlanResourceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+            },
+            "appServicePrincipalID": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('appServiceAppName')), '2024-04-01', 'full').identity.principalId]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'AppInsightsDeployment')]",
+        "[resourceId('Microsoft.Resources/deployments', 'cosmosDbDeployment')]",
+        "[resourceId('Microsoft.Resources/deployments', 'networkDeployment')]",
+        "[resourceId('Microsoft.Resources/deployments', 'storageDeployment')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
       "name": "storageDeployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -307,8 +581,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.36.1.42791",
-              "templateHash": "2777784655932474226"
+              "version": "0.36.177.2456",
+              "templateHash": "2771231245126498440"
             }
           },
           "parameters": {
@@ -345,7 +619,10 @@
               },
               "kind": "StorageV2",
               "properties": {
-                "accessTier": "Hot"
+                "accessTier": "Hot",
+                "allowBlobPublicAccess": true,
+                "supportsHttpsTrafficOnly": true,
+                "minimumTlsVersion": "TLS1_2"
               }
             }
           ],
@@ -418,8 +695,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.36.1.42791",
-              "templateHash": "16696725355288884296"
+              "version": "0.36.177.2456",
+              "templateHash": "4627652962017264359"
             }
           },
           "parameters": {
@@ -627,7 +904,7 @@
                           "order": "ascending"
                         },
                         {
-                          "path": "/name",
+                          "path": "/email",
                           "order": "descending"
                         }
                       ]
@@ -695,7 +972,7 @@
                           "order": "ascending"
                         },
                         {
-                          "path": "/dateCreated",
+                          "path": "/filename",
                           "order": "descending"
                         }
                       ]
@@ -717,7 +994,7 @@
                     "uniqueKeys": [
                       {
                         "paths": [
-                          "/fileID"
+                          "/fileid"
                         ]
                       }
                     ]
@@ -745,10 +1022,93 @@
             "cosmosDbDatabaseId": {
               "type": "string",
               "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', toLower(parameters('accountName')), parameters('databaseName'))]"
+            },
+            "cosmosDbEndpoint": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', toLower(parameters('accountName'))), '2025-04-15').documentEndpoint]"
             }
           }
         }
       }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "assignRoles",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "appServiceAppName": {
+            "value": "[parameters('appServiceName')]"
+          },
+          "appServicePrincipalID": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'appServiceDeployment'), '2022-09-01').outputs.appServicePrincipalID.value]"
+          },
+          "storageAccountId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storageDeployment'), '2022-09-01').outputs.storageAccountId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.177.2456",
+              "templateHash": "12479554522157692230"
+            }
+          },
+          "parameters": {
+            "appServiceAppName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the App Service (used only for deterministic GUID generation)."
+              }
+            },
+            "appServicePrincipalID": {
+              "type": "string",
+              "metadata": {
+                "description": "App Service principal (object) ID"
+              }
+            },
+            "storageAccountId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the Storage Account"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', last(split(parameters('storageAccountId'), '/')))]",
+              "name": "[guid(resourceGroup().id, parameters('appServiceAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')]",
+                "principalId": "[parameters('appServicePrincipalID')]"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', last(split(parameters('storageAccountId'), '/')))]",
+              "name": "[guid(resourceGroup().id, parameters('appServiceAppName'), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+                "principalId": "[parameters('appServicePrincipalID')]"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'appServiceDeployment')]",
+        "[resourceId('Microsoft.Resources/deployments', 'storageDeployment')]"
+      ]
     }
   ],
   "outputs": {

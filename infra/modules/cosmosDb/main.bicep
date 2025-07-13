@@ -7,7 +7,6 @@
   @description('The primary region for the Azure Cosmos DB account.')
   param primaryRegion string
 
-  @description('The secondary region for the Azure Cosmos DB account.')
   param secondaryRegion string
 
   @allowed([
@@ -228,7 +227,7 @@
               ]
             }
           ]
-        }
+        } 
         defaultTtl: 86400
         uniqueKeyPolicy: {
           uniqueKeys: [

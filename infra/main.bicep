@@ -71,7 +71,7 @@
   @description('App Insight name.')
   param appInsightName string
 
-  @allowed([
+    @allowed([
     'nonprod'
     'prod'
   ])

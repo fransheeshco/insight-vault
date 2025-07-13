@@ -29,19 +29,23 @@ param networkName string
 
 var appServicePlanName = 'insightVaultASP'
 
-var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'F1'
+// Changed SKU from 'F1' (Free) to 'B1' (Basic) for nonprod environments
+var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'B1'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: appServicePlanName
   location: location
   sku: {
     name: appServicePlanSkuName
+    // Changed tier from 'Dynamic' to 'Basic' to match 'B1' SKU
+    tier: (environmentType == 'prod') ? 'ElasticPremium' : 'Basic'
   }
 }
 
 resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
   name: appServiceAppName
   location: location
+  kind: 'functionapp'
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
