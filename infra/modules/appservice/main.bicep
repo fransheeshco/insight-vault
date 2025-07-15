@@ -27,13 +27,15 @@ param storageAccountName string
 
 param networkName string
 
-var appServicePlanName = 'insightVaultASP'
+param staticAppName string
+
+var functionAppName = 'insightVaultASP'
 
 // Changed SKU from 'F1' (Free) to 'B1' (Basic) for nonprod environments
 var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'B1'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name: appServicePlanName
+  name: functionAppName
   location: location
   sku: {
     name: appServicePlanSkuName
@@ -83,7 +85,35 @@ resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
   }
 }
 
+resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
+  name: staticAppName
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
+  }
+  location: location
+  properties: {
+    repositoryUrl: 'https://github.com/fransheeshco/insight-vault'
+    branch: 'main'
+    buildProperties: {
+      appLocation: '/'
+      apiLocation: 'api'
+      outputLocation: 'build'
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+// output for function app service
 output appServiceAppHostName string = appServiceApp.properties.defaultHostName
 output appServiceAppResourceId string = appServiceApp.id
 output appServicePlanResourceId string = appServicePlan.id
 output appServicePrincipalID string = appServiceApp.identity.principalId
+
+// output for static web app service
+output staticWebAppHostName string = staticWebApp.properties.defaultHostname
+output staticWebAppURL string = 'https://${staticWebApp.properties.defaultHostname}'
+output staticWebAppResourceID string = staticWebApp.id
+

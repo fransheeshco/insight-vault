@@ -1,0 +1,3 @@
+app_location: "frontend"
+api_location: "api"
+output_location: "frontend/out"
