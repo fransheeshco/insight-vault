@@ -1,0 +1,75 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "cosmosAccountName": {
+      "value": "insightvaultcosmosdev"
+    },
+    "primaryRegion": {
+      "value": "southeastasia"
+    },
+    "secondaryRegion": {
+      "value": "centralus"
+    },
+    "defaultConsistencyLevel": {
+      "value": "Session"
+    },
+    "maxStalenessPrefix": {
+      "value": 100000
+    },
+    "maxIntervalInSeconds": {
+      "value": 300
+    },
+    "systemManagedFailover": {
+      "value": true
+    },
+    "enableAnalyticalStorage": {
+      "value": true
+    },
+    "databaseName": {
+      "value": "insightVaultDB"
+    },
+    "userContainerName": {
+      "value": "userContainer"
+    },
+    "fileContainerName": {
+      "value": "fileContainer"
+    },
+    "throughput": {
+      "value": 400
+    },
+    "vnetName": {
+      "value": "insightVaultVnetDev"
+    },
+    "subnet1name": {
+      "value": "Subnet-1"
+    },
+    "subnet2name": {
+      "value": "Subnet-2"
+    },
+    "vnetAddressPrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "subnet1AddressPrefix": {
+      "value": "10.0.0.0/24"
+    },
+    "subnet2AddressPrefix": {
+      "value": "10.0.1.0/24"
+    },
+    "storageAccountName": {
+      "value": "insightVaultStorageDev"
+    },
+    "storageAccountSku": {
+      "value": "Standard_LRS"
+    },
+    "appServiceName": {
+      "value": "insightVaultASN"
+    },
+    "appInsightName": {
+      "value": "insightVaultAI"
+    }
+  }
+}
