@@ -68,6 +68,8 @@
 
   param appServiceName string
 
+  param staticAppName string
+
   @description('App Insight name.')
   param appInsightName string
 
@@ -112,6 +114,7 @@
       cosmosDbEndpoint: cosmosDbModule.outputs.cosmosDbEndpoint
       storageAccountName: storageModule.outputs.storageAccountName
       networkName: networkModule.outputs.vnetName
+      staticAppName: staticAppName
     }
   }
 

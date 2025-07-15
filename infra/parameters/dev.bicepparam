@@ -25,5 +25,6 @@
   param storageAccountSku = 'Standard_LRS'
 
   param appServiceName = 'insightVaultASN'
+  param staticAppName = 'insightvault'
 
   param appInsightName = 'insightVaultAI'
