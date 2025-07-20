@@ -80,6 +80,7 @@
   @description('Specifies the environment type, which controls the SKU.')
   param environmentType string = 'nonprod'
 
+  param aiModelName string
 
   module networkModule 'modules/network/main.bicep' = {
     name: 'networkDeployment'
@@ -154,6 +155,14 @@
     storageAccountId: storageModule.outputs.storageAccountId
   }
 }
+
+  module openAIModule './modules/openai/main.bicep' = { 
+    name: 'openAIModule'
+    params: {
+      aiModelName: aiModelName
+      location: location
+    }
+  }
 
 
   output cosmosDbName string = cosmosDbModule.outputs.cosmosDbAccountName

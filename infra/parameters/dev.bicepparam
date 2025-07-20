@@ -28,3 +28,5 @@
   param staticAppName = 'insightvault'
 
   param appInsightName = 'insightVaultAI'
+
+  param aiModelName = 'openAIServices'
