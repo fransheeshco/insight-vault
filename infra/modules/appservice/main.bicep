@@ -29,6 +29,9 @@ param networkName string
 
 param staticAppName string
 
+
+param openAIEndpoint string
+
 var functionAppName = 'insightVaultASP'
 
 // Changed SKU from 'F1' (Free) to 'B1' (Basic) for nonprod environments
@@ -76,6 +79,14 @@ resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
         {
           name: 'NETWORK_NAME'
           value: networkName
+        }
+        {
+        name: 'AZURE_OPENAI_ENDPOINT'
+        value: openAIEndpoint
+        }
+        {
+          name: 'AZURE_OPENAI_API_VERSION'
+          value: '2024-06-01-preview'
         }
       ]
     }

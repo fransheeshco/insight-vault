@@ -30,3 +30,4 @@
   param appInsightName = 'insightVaultAI'
 
   param aiModelName = 'openAIServices'
+  
