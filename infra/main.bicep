@@ -1,10 +1,17 @@
+@description('Base name for all resources (e.g., insightvaultdev)')
+param baseName string
+
 @description('Deployment location for all resources')
 param location string
 
-// Cosmos DB Parameters
-@description('CosmosDB account name')
-param cosmosAccountName string
+@allowed([
+  'nonprod'
+  'prod'
+])
+@description('Specifies the environment type, which controls the SKU.')
+param environmentType string = 'nonprod'
 
+// Cosmos DB config
 @description('The primary region for the Cosmos DB account.')
 param primaryRegion string
 
@@ -26,28 +33,10 @@ param systemManagedFailover bool
 @description('Enable analytical storage for Cosmos DB account.')
 param enableAnalyticalStorage bool
 
-@description('Cosmos DB SQL database name.')
-param databaseName string
-
-@description('Name for the user container.')
-param userContainerName string
-
-@description('Name for the file container.')
-param fileContainerName string
-
 @description('Container/database throughput (RU/s).')
 param throughput int
 
-// Network Parameters
-@description('Virtual network name')
-param vnetName string
-
-@description('Subnet 1 name')
-param subnet1name string
-
-@description('Subnet 2 name')
-param subnet2name string
-
+// Network
 @description('VNet address prefix')
 param vnetAddressPrefix string
 
@@ -57,31 +46,29 @@ param subnet1AddressPrefix string
 @description('Subnet 2 address prefix')
 param subnet2AddressPrefix string
 
-// Storage Parameters
-@description('Storage account name')
-@minLength(3)
-@maxLength(24)
-param storageAccountName string
-
+// Storage
 @description('Storage account SKU')
 param storageAccountSku string
 
-param appServiceName string
+// Generate suffix and derived names
+var suffix = uniqueString(resourceGroup().id)
 
-param staticAppName string
+var cosmosAccountName = '${baseName}cosmos${suffix}'
+var databaseName = '${baseName}db${suffix}'
+var userContainerName = '${baseName}user${suffix}'
+var fileContainerName = '${baseName}file${suffix}'
+var vnetName = '${baseName}vnet${suffix}'
+var subnet1name = '${baseName}subnet1${suffix}'
+var subnet2name = '${baseName}subnet2${suffix}'
+var storageAccountName = toLower('${baseName}stor${suffix}')
+var appServiceName = '${baseName}appsvc${suffix}'
+var staticAppName = '${baseName}static${suffix}'
+var typescriptFunctionAppName = '${baseName}tsfunc${suffix}'
+var pythonFunctionAppName = '${baseName}pyfunc${suffix}'
+var appInsightName = '${baseName}ai${suffix}'
+var aiModelName = '${baseName}model${suffix}'
 
-@description('App Insight name.')
-param appInsightName string
-
-  @allowed([
-  'nonprod'
-  'prod'
-])
-@description('Specifies the environment type, which controls the SKU.')
-param environmentType string = 'nonprod'
-
-param aiModelName string
-
+// Network module
 module networkModule 'modules/network/main.bicep' = {
   name: 'networkDeployment'
   params: {
@@ -95,6 +82,7 @@ module networkModule 'modules/network/main.bicep' = {
   }
 }
 
+// App Insights
 module appInsights 'modules/appinsights/main.bicep' = {
   name: 'AppInsightsDeployment'
   params: {
@@ -103,11 +91,11 @@ module appInsights 'modules/appinsights/main.bicep' = {
   }
 }
 
+// App Service
 module appServiceModule 'modules/appservice/main.bicep' = {
-  name: 'appServiceDeployment'  
+  name: 'appServiceDeployment'
   params: {
     location: location
-    appServiceAppName: appServiceName 
     environmentType: environmentType
     appInsightsKey: appInsights.outputs.appInsightsKey
     cosmosDbAccountId: cosmosDbModule.outputs.cosmosDbAccountId
@@ -117,9 +105,12 @@ module appServiceModule 'modules/appservice/main.bicep' = {
     networkName: networkModule.outputs.vnetName
     staticAppName: staticAppName
     openAIEndpoint: openAIModule.outputs.openAIEndpoint
+    typescriptFunctionAppName: typescriptFunctionAppName
+    pythonFunctionAppName: pythonFunctionAppName
   }
 }
 
+// Storage
 module storageModule 'modules/storage/main.bicep' = {
   name: 'storageDeployment'
   params: {
@@ -129,6 +120,7 @@ module storageModule 'modules/storage/main.bicep' = {
   }
 }
 
+// Cosmos DB
 module cosmosDbModule './modules/cosmosDb/main.bicep' = {
   name: 'cosmosDbDeployment'
   params: {
@@ -148,25 +140,27 @@ module cosmosDbModule './modules/cosmosDb/main.bicep' = {
   }
 }
 
+// Identity and Role Assignments
 module identity './modules/identitymanager/main.bicep' = {
-name: 'assignRoles'
-params: {
-  appServiceAppName: appServiceName
-  appServicePrincipalID: appServiceModule.outputs.appServicePrincipalID
-  storageAccountId: storageModule.outputs.storageAccountId
-  openAIResourceId: openAIModule.outputs.modelInstanceID
-}
+  name: 'assignRoles'
+  params: {
+    appServiceAppName: appServiceName
+    appServicePrincipalID: appServiceModule.outputs.appServicePrincipalID
+    storageAccountId: storageModule.outputs.storageAccountId
+    openAIResourceId: openAIModule.outputs.modelInstanceID
+  }
 }
 
-module openAIModule './modules/openai/main.bicep' = { 
-  name: 'openAIModule'
+// OpenAI Module
+module openAIModule './modules/openai/main.bicep' = {
+  name: aiModelName
   params: {
     aiModelName: aiModelName
     location: location
   }
 }
 
-
+// Outputs
 output cosmosDbName string = cosmosDbModule.outputs.cosmosDbAccountName
 output cosmosDbId string = cosmosDbModule.outputs.cosmosDbDatabaseId
 output storageId string = storageModule.outputs.storageAccountId

@@ -1,9 +1,6 @@
 @description('The Azure region to deploy resources in.')
 param location string
 
-@description('The name of the App Service application.')
-param appServiceAppName string
-
 @allowed([
   'nonprod'
   'prod'
@@ -27,18 +24,20 @@ param storageAccountName string
 
 param networkName string
 
-param staticAppName string
-
+param staticAppName string  
 
 param openAIEndpoint string
 
-var functionAppName = 'insightVaultASP'
+param typescriptFunctionAppName string
+param pythonFunctionAppName string
+
+var appServicePlanName = 'insightVaultASP'
 
 // Changed SKU from 'F1' (Free) to 'B1' (Basic) for nonprod environments
 var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'B1'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name: functionAppName
+  name: appServicePlanName
   location: location
   sku: {
     name: appServicePlanSkuName
@@ -47,8 +46,57 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   }
 }
 
-resource appServiceApp 'Microsoft.Web/sites@2024-04-01' = {
-  name: appServiceAppName
+resource typescriptFunctionAppService 'Microsoft.Web/sites@2024-04-01' = {
+  name: typescriptFunctionAppName
+  location: location
+  kind: 'functionapp'
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    siteConfig: {
+      appSettings: [
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: appInsightsKey
+        }
+        {
+          name: 'COSMOS_DB_ACCOUNT'
+          value: cosmosDbAccountName
+        }
+        {
+          name: 'COSMOS_DB_KEY'
+          value: listKeys(cosmosDbAccountId, '2021-04-15').primaryMasterKey
+        }
+        {
+          name: 'COSMOS_DB_URI'
+          value: cosmosDbEndpoint
+        }
+        {
+          name: 'STORAGE_ACCOUNT_NAME'
+          value: storageAccountName
+        }
+        {
+          name: 'NETWORK_NAME'
+          value: networkName
+        }
+        {
+        name: 'AZURE_OPENAI_ENDPOINT'
+        value: openAIEndpoint
+        }
+        {
+          name: 'AZURE_OPENAI_API_VERSION'
+          value: '2024-06-01-preview'
+        }
+      ]
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+resource pythonFunctionAppService 'Microsoft.Web/sites@2024-04-01' = {
+  name: pythonFunctionAppName
   location: location
   kind: 'functionapp'
   properties: {
@@ -117,11 +165,17 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
   }
 }
 
-// output for function app service
-output appServiceAppHostName string = appServiceApp.properties.defaultHostName
-output appServiceAppResourceId string = appServiceApp.id
+// output for typescript function app service
+output appServiceAppHostName string = typescriptFunctionAppService.properties.defaultHostName
+output appServiceAppResourceId string = typescriptFunctionAppService.id
 output appServicePlanResourceId string = appServicePlan.id
-output appServicePrincipalID string = appServiceApp.identity.principalId
+output appServicePrincipalID string = typescriptFunctionAppService.identity.principalId
+
+// output for python function app service
+output pythonFunctionAppServiceHostName string = pythonFunctionAppService.properties.defaultHostName
+output pythonFunctionAppServiceResourceID string = pythonFunctionAppService.id
+output pythonFunctionAppServicePlanResourceId string = appServicePlan.id
+output pythonServicePrincipalID string = pythonFunctionAppService.identity.principalId
 
 // output for static web app service
 output staticWebAppHostName string = staticWebApp.properties.defaultHostname
