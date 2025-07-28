@@ -84,6 +84,9 @@ module appServiceModule 'modules/appservice/main.bicep' = {
     storageAccountName: storageAccountName
     location: location
   }
+  dependsOn: [
+    storageModule
+  ]
 }
 
 // Storage
