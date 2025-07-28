@@ -9,11 +9,17 @@ param location string
 @description('The SKU of the storage account (e.g., Standard_LRS, Standard_GRS).')
 param storageAccountSku string = 'Standard_LRS'
 
+@description('Enable free tier resources')
+param enableFreeTier bool = false
+
+// Use Standard_LRS for free tier (5GB free), otherwise use provided SKU
+var finalStorageSku = enableFreeTier ? 'Standard_LRS' : storageAccountSku
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
   sku: {
-    name: storageAccountSku
+    name: finalStorageSku
   }
   kind: 'StorageV2'
   properties: {

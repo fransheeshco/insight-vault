@@ -1,184 +1,105 @@
-@description('The Azure region to deploy resources in.')
-param location string
+@description('Name for the App Service plan (consumption plan)')
+param planName string
 
-@allowed([
-  'nonprod'
-  'prod'
-])
-@description('Specifies the environment type, which controls the SKU.')
-param environmentType string = 'nonprod'
+@description('Name for the TypeScript Function App')
+param tsFuncName string
 
-@description('Instrumentation Key for Application Insights.')
-param appInsightsKey string
+@description('Name for the Python Function App')
+param pyFuncName string
 
-@description('Cosmos DB Account Name')
-param cosmosDbAccountName string
-
-@description('Cosmos DB Account ID')
-param cosmosDbAccountId string
-
-@description('Cosmos DB Account Endpoint')
-param cosmosDbEndpoint string
-
+@description('Name of the storage account to use for the function apps')
 param storageAccountName string
 
-param networkName string
+@description('Location for all resources')
+param location string
 
-param staticAppName string  
-
-param openAIEndpoint string
-
-param typescriptFunctionAppName string
-param pythonFunctionAppName string
-
-var appServicePlanName = 'insightVaultASP'
-
-// Changed SKU from 'F1' (Free) to 'B1' (Basic) for nonprod environments
-var appServicePlanSkuName = (environmentType == 'prod') ? 'P1v3' : 'B1'
-
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
-  name: appServicePlanName
-  location: location
-  sku: {
-    name: appServicePlanSkuName
-    // Changed tier from 'Dynamic' to 'Basic' to match 'B1' SKU
-    tier: (environmentType == 'prod') ? 'ElasticPremium' : 'Basic'
-  }
+// Reference existing storage account
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+  name: storageAccountName
 }
 
-resource typescriptFunctionAppService 'Microsoft.Web/sites@2024-04-01' = {
-  name: typescriptFunctionAppName
+// Consumption Plan (shared by both functions)
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: planName
+  location: location
+  sku: {
+    name: 'Y1'
+    tier: 'Dynamic'
+  }
+  kind: 'functionapp'
+}
+
+// TypeScript Function App
+resource tsFunctionApp 'Microsoft.Web/sites@2022-03-01' = {
+  name: tsFuncName
   location: location
   kind: 'functionapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
-    httpsOnly: true
     siteConfig: {
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: appInsightsKey
+          name: 'AzureWebJobsStorage'
+          value: storageAccount.properties.primaryEndpoints.blob
         }
         {
-          name: 'COSMOS_DB_ACCOUNT'
-          value: cosmosDbAccountName
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
         }
         {
-          name: 'COSMOS_DB_KEY'
-          value: listKeys(cosmosDbAccountId, '2021-04-15').primaryMasterKey
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'node'
         }
         {
-          name: 'COSMOS_DB_URI'
-          value: cosmosDbEndpoint
-        }
-        {
-          name: 'STORAGE_ACCOUNT_NAME'
-          value: storageAccountName
-        }
-        {
-          name: 'NETWORK_NAME'
-          value: networkName
-        }
-        {
-        name: 'AZURE_OPENAI_ENDPOINT'
-        value: openAIEndpoint
-        }
-        {
-          name: 'AZURE_OPENAI_API_VERSION'
-          value: '2024-06-01-preview'
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
         }
       ]
     }
-  }
-  identity: {
-    type: 'SystemAssigned'
+    httpsOnly: true
   }
 }
 
-resource pythonFunctionAppService 'Microsoft.Web/sites@2024-04-01' = {
-  name: pythonFunctionAppName
+// Python Function App
+resource pyFunctionApp 'Microsoft.Web/sites@2022-03-01' = {
+  name: pyFuncName
   location: location
   kind: 'functionapp'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
-    httpsOnly: true
     siteConfig: {
       appSettings: [
         {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: appInsightsKey
+          name: 'AzureWebJobsStorage'
+          value: storageAccount.properties.primaryEndpoints.blob
         }
         {
-          name: 'COSMOS_DB_ACCOUNT'
-          value: cosmosDbAccountName
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
         }
         {
-          name: 'COSMOS_DB_KEY'
-          value: listKeys(cosmosDbAccountId, '2021-04-15').primaryMasterKey
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
         }
         {
-          name: 'COSMOS_DB_URI'
-          value: cosmosDbEndpoint
-        }
-        {
-          name: 'STORAGE_ACCOUNT_NAME'
-          value: storageAccountName
-        }
-        {
-          name: 'NETWORK_NAME'
-          value: networkName
-        }
-        {
-        name: 'AZURE_OPENAI_ENDPOINT'
-        value: openAIEndpoint
-        }
-        {
-          name: 'AZURE_OPENAI_API_VERSION'
-          value: '2024-06-01-preview'
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
         }
       ]
     }
-  }
-  identity: {
-    type: 'SystemAssigned'
+    httpsOnly: true
   }
 }
 
-resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
-  name: staticAppName
-  sku: {
-    name: 'Standard'
-    tier: 'Standard'
-  }
-  location: location
-  properties: {
-    repositoryUrl: 'https://github.com/fransheeshco/insight-vault'
-    branch: 'main'
-    buildProperties: {
-      appLocation: '/'
-      apiLocation: 'api'
-      outputLocation: 'build'
-    }
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-}
-
-// output for typescript function app service
-output appServiceAppHostName string = typescriptFunctionAppService.properties.defaultHostName
-output appServiceAppResourceId string = typescriptFunctionAppService.id
-output appServicePlanResourceId string = appServicePlan.id
-output appServicePrincipalID string = typescriptFunctionAppService.identity.principalId
-
-// output for python function app service
-output pythonFunctionAppServiceHostName string = pythonFunctionAppService.properties.defaultHostName
-output pythonFunctionAppServiceResourceID string = pythonFunctionAppService.id
-output pythonFunctionAppServicePlanResourceId string = appServicePlan.id
-output pythonServicePrincipalID string = pythonFunctionAppService.identity.principalId
-
-// output for static web app service
-output staticWebAppHostName string = staticWebApp.properties.defaultHostname
-output staticWebAppURL string = 'https://${staticWebApp.properties.defaultHostname}'
-output staticWebAppResourceID string = staticWebApp.id
-
+// Outputs
+output functionAppPlanName string = appServicePlan.name
+output tsFunctionAppName string = tsFunctionApp.name
+output pyFunctionAppName string = pyFunctionApp.name
+output tsFunctionAppUrl string = 'https://${tsFunctionApp.properties.defaultHostName}/api'
+output pyFunctionAppUrl string = 'https://${pyFunctionApp.properties.defaultHostName}/api'

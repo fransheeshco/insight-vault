@@ -15,7 +15,6 @@ export async function uploadCSV(request: HttpRequest, context: InvocationContext
                 body: "Missing file or filename. Please include a file and filename query/header."
             }
         }
-
         const blobServiceClient = BlobServiceClient.fromConnectionString(
             process.env.AZURE_STORAGE_CONNECTION_STRING!
         )

@@ -40,4 +40,4 @@ def CsvBlobTrigger(myblob: func.InputStream):
     blob_name = f"parsed-{original_name}.json"
     blob_client = container_client.get_blob_client(blob_name)
     blob_client.upload_blob(json_data, overwrite=True)
-    logging.info(f"Uploaded parsed data to '{container_name}/{blob_name}'")
+    logging.info(f"Uploaded parsed data to '{container_name}/{blob_name}'") 

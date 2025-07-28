@@ -53,6 +53,9 @@
   @description('The throughput for the containers (RU/s).')
   param throughput int = 400
 
+  @description('Enable free tier resources')
+  param enableFreeTier bool = false
+
   var consistencyPolicy = {
     Eventual: {
       defaultConsistencyLevel: 'Eventual'
@@ -73,7 +76,14 @@
     }
   }
 
-  var locations = [
+  // For free tier, use single region only
+  var locations = enableFreeTier ? [
+    {
+      locationName: primaryRegion
+      failoverPriority: 0
+      isZoneRedundant: false
+    }
+  ] : [
     {
       locationName: primaryRegion
       failoverPriority: 0
@@ -86,6 +96,11 @@
     }
   ]
 
+  // For free tier, disable analytical storage and use minimum throughput
+  var finalAnalyticalStorage = enableFreeTier ? false : enableAnalyticalStorage
+  var finalThroughput = enableFreeTier ? 1000 : throughput
+  var finalSystemManagedFailover = enableFreeTier ? false : systemManagedFailover
+
   resource account 'Microsoft.DocumentDB/databaseAccounts@2025-04-15' = {
     name: toLower(accountName)
     location: location
@@ -94,9 +109,9 @@
       consistencyPolicy: consistencyPolicy[defaultConsistencyLevel]
       locations: locations
       databaseAccountOfferType: 'Standard'
-      enableAnalyticalStorage: enableAnalyticalStorage // Corrected usage
+      enableAnalyticalStorage: finalAnalyticalStorage // Corrected usage
       disableKeyBasedMetadataWriteAccess: true
-      enableAutomaticFailover: systemManagedFailover // Renamed for clarity
+      enableAutomaticFailover: finalSystemManagedFailover // Renamed for clarity
     }
   }
 
@@ -108,7 +123,7 @@
         id: databaseName
       }
       options: {
-        throughput: throughput // Apply throughput at database level
+        throughput: finalThroughput // Apply throughput at database level
       }
     }
   }
