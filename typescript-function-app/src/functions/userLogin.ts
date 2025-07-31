@@ -1,11 +1,45 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import * as bcrypt from "bcryptjs"
+import {container} from "../db/cosmosClient"
 
 export async function userLogin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-    context.log(`Http function processed request for url "${request.url}"`);
+    const { username, password } = await request.json() as { username?: string, password?: string};
 
-    const name = request.query.get('name') || await request.text() || 'world';
+    if (!username || !password) {
+        return {
+            status: 400,
+            body: "Username and password are required"
+        }
+    }  
 
-    return { body: `Hello, ${name}!` };
+    const querySpec = {
+        query: "SELECT * FROM c WHERE c.username = @username",
+        parameters: [{ name: "@username", value: username }]
+    }
+
+    const { resources: items } = await container.items.query(querySpec).fetchAll();
+    const user = items[0];
+
+    if (!user) {
+        return {
+            status: 401,
+            body: "Invalid username or password"
+        };
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+        return {
+            status: 401,
+            body: "Invalid password"
+        };
+    }    
+
+    return {
+        status: 200,
+        jsonBody: { message: "Login successful", user }
+    };
 };
 
 app.http('userLogin', {
