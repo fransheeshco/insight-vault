@@ -1,9 +1,17 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import * as bcrypt from "bcryptjs"
+import * as jwt from "jsonwebtoken"
 import {container} from "../db/cosmosClient"
+import * as dotenv from "dotenv"
+
+dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET_KEY || "your-very-secure-dev-secret";
+
 
 export async function userLogin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const { username, password } = await request.json() as { username?: string, password?: string};
+
 
     if (!username || !password) {
         return {
@@ -36,9 +44,15 @@ export async function userLogin(request: HttpRequest, context: InvocationContext
         };
     }    
 
+    const token = jwt.sign(
+        { id: user.id, username: user.username},
+        JWT_SECRET,
+        { expiresIn: "1h" }
+    )
+
     return {
         status: 200,
-        jsonBody: { message: "Login successful", user }
+        jsonBody: { message: "Login successful", token, user }
     };
 };
 

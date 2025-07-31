@@ -12,9 +12,12 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/cosmos": "^4.5.0",
     "@azure/functions": "^4.0.0",
     "@azure/storage-blob": "^12.27.0",
-    "dotenv": "^17.2.0"
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@types/node": "18.x",
