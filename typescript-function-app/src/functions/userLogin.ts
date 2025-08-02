@@ -10,19 +10,19 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY || "your-very-secure-dev-secret";
 
 
 export async function userLogin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-    const { username, password } = await request.json() as { username?: string, password?: string};
+    const { email, password } = await request.json() as { email?: string, password?: string};
 
 
-    if (!username || !password) {
+    if (!email || !password) {
         return {
             status: 400,
-            body: "Username and password are required"
+            body: "email and password are required"
         }
     }  
 
     const querySpec = {
-        query: "SELECT * FROM c WHERE c.username = @username",
-        parameters: [{ name: "@username", value: username }]
+        query: "SELECT * FROM c WHERE c.email = @email",
+        parameters: [{ name: "@email", value: email }]
     }
 
     const { resources: items } = await container.items.query(querySpec).fetchAll();
@@ -31,7 +31,7 @@ export async function userLogin(request: HttpRequest, context: InvocationContext
     if (!user) {
         return {
             status: 401,
-            body: "Invalid username or password"
+            body: "Invalid email or password"
         };
     }
     
@@ -45,7 +45,7 @@ export async function userLogin(request: HttpRequest, context: InvocationContext
     }    
 
     const token = jwt.sign(
-        { id: user.id, username: user.username},
+        { id: user.id, email: user.email},
         JWT_SECRET,
         { expiresIn: "1h" }
     )

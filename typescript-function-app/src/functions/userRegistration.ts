@@ -3,9 +3,9 @@ import {container} from "../db/cosmosClient"
 import * as bcryptjs from 'bcryptjs'
 
 export async function userRegistration(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
-    const { username, password } = await request.json() as { username?: string, password?: string };
+    const { email, password } = await request.json() as { email?: string, password?: string };
 
-    if (!username || !password) {
+    if (!email || !password) {
         return {
             status: 400,
             body: "Username and password are required"
@@ -16,7 +16,7 @@ export async function userRegistration(request: HttpRequest, context: Invocation
 
     try {
         const newUser = {
-            username: username,
+            email: email,
             password: hashed_password,
         };
 
