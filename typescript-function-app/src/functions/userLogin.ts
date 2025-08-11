@@ -12,7 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY || "your-very-secure-dev-secret";
 export async function userLogin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const { email, password } = await request.json() as { email?: string, password?: string};
 
-
     if (!email || !password) {
         return {
             status: 400,
@@ -52,6 +51,12 @@ export async function userLogin(request: HttpRequest, context: InvocationContext
 
     return {
         status: 200,
+        headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*", // allow all origins
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        },
         jsonBody: { message: "Login successful", token, user }
     };
 };

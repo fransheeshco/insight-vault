@@ -10,7 +10,7 @@ export async function uploadCSV(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    // ✅ Step 1: Get and verify the JWT
+    // Step 1: Get and verify the JWT
     const authHeader = request.headers.get("authorization") || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : null;
 
@@ -41,15 +41,24 @@ export async function uploadCSV(
       };
     }
 
-    const userId = decoded.userId || decoded.email || "anonymous";
-    if (!userId) {
+    // Use ONLY userId, no email fallback
+    const userId = decoded.userId || decoded.id;
+    if (!userId || typeof userId !== "string") {
       return {
         status: 400,
-        body: "Invalid token: Missing user identifier.",
+        body: "Invalid token: Missing or invalid userId.",
       };
     }
 
-    // ✅ Step 2: Read file and filename
+    // Validate userId for safe blob naming (allow alphanumeric, dash, underscore)
+    if (!/^[a-zA-Z0-9-_]+$/.test(userId)) {
+      return {
+        status: 400,
+        body: "Invalid userId format.",
+      };
+    }
+
+    // Step 2: Read file and filename
     const fileBuffer = await request.arrayBuffer();
     const filename = request.query.get("filename") || request.headers.get("x-filename");
 
@@ -60,7 +69,7 @@ export async function uploadCSV(
       };
     }
 
-    // ✅ Step 3: Upload to Azure Blob Storage under user's folder
+    // Step 3: Upload to Azure Blob Storage under user's folder (userId)
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
     if (!connectionString) {
       return {
@@ -70,7 +79,7 @@ export async function uploadCSV(
     }
 
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-    const containerName = "csv-uploads";
+    const containerName = "csvuploads";
     const containerClient = blobServiceClient.getContainerClient(containerName);
 
     const createContainerResponse = await containerClient.createIfNotExists();
@@ -80,7 +89,7 @@ export async function uploadCSV(
       context.log(`ℹ️ Container "${containerName}" already exists`);
     }
 
-    // 👇 Define path like: userId/filename.csv
+    // Blob name: userId/filename.csv
     const blobName = `${userId}/${filename}`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
@@ -104,6 +113,6 @@ export async function uploadCSV(
 
 app.http("uploadCSV", {
   methods: ["POST"],
-  authLevel: "anonymous", // Still allow access if token is manually verified
+  authLevel: "anonymous",
   handler: uploadCSV,
 });

@@ -24,6 +24,12 @@ export async function userRegistration(request: HttpRequest, context: Invocation
 
         return {
             status: 201,
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*", // allow all origins
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization"
+            },    
             jsonBody: {
                 message: "User registered successfully",
                 user: resource,
